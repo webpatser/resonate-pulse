@@ -1,0 +1,52 @@
+{
+    "name": "webpatser/resonate-pulse",
+    "description": "Laravel Pulse cards for the webpatser/resonate plugin family",
+    "keywords": ["resonate", "pulse", "dashboard", "presence", "metrics", "laravel"],
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Christoph Kempen",
+            "email": "christoph@downsized.nl"
+        }
+    ],
+    "require": {
+        "php": "^8.5",
+        "illuminate/contracts": "^13.0",
+        "illuminate/support": "^13.0",
+        "laravel/pulse": "^1.7",
+        "webpatser/resonate-roster": "^0.2"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^10.0|^11.0",
+        "pestphp/pest": "^4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Webpatser\\ResonatePulse\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Webpatser\\ResonatePulse\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Webpatser\\ResonatePulse\\ResonatePulseServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "test": "pest"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
