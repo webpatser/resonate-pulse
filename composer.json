@@ -19,7 +19,10 @@
     },
     "require-dev": {
         "orchestra/testbench": "^10.0|^11.0",
-        "pestphp/pest": "^4.0"
+        "pestphp/pest": "^4.0",
+        "webpatser/resonate-token-auth": "^0.2",
+        "webpatser/resonate-user-cap": "^0.2",
+        "webpatser/resonate-webhooks": "^0.2"
     },
     "autoload": {
         "psr-4": {

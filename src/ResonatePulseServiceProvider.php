@@ -5,6 +5,9 @@ namespace Webpatser\ResonatePulse;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
 use Webpatser\ResonatePulse\Pulse\Livewire\Roster;
+use Webpatser\ResonatePulse\Pulse\Livewire\TokenAuth;
+use Webpatser\ResonatePulse\Pulse\Livewire\UserCap;
+use Webpatser\ResonatePulse\Pulse\Livewire\Webhooks;
 
 /**
  * Wires the resonate-pulse cards into a host Laravel application.
@@ -34,6 +37,9 @@ class ResonatePulseServiceProvider extends ServiceProvider
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'resonate-pulse');
 
         Livewire::component('resonate-pulse.roster', Roster::class);
+        Livewire::component('resonate-pulse.webhooks', Webhooks::class);
+        Livewire::component('resonate-pulse.user-cap', UserCap::class);
+        Livewire::component('resonate-pulse.token-auth', TokenAuth::class);
 
         if ($this->app->runningInConsole()) {
             $this->publishes([
