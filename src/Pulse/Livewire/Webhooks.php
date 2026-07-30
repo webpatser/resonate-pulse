@@ -2,6 +2,8 @@
 
 namespace Webpatser\ResonatePulse\Pulse\Livewire;
 
+use Illuminate\Contracts\View\Factory as ViewFactory;
+use Illuminate\Contracts\View\View;
 use Laravel\Pulse\Livewire\Card;
 use Laravel\Pulse\Livewire\Concerns\HasPeriod;
 use Laravel\Pulse\Livewire\Concerns\RemembersQueries;
@@ -19,12 +21,12 @@ class Webhooks extends Card
     /**
      * Render the component.
      */
-    public function render()
+    public function render(): ViewFactory|View
     {
         [$readings, $time, $runAt] = $this->remember(function () {
             return [
-                'delivered' => $this->aggregate(['resonate_webhook_delivered'], 'count'),
-                'failed' => $this->aggregate(['resonate_webhook_failed'], 'count'),
+                'delivered' => $this->aggregate('resonate_webhook_delivered', 'count'),
+                'failed' => $this->aggregate('resonate_webhook_failed', 'count'),
             ];
         });
 

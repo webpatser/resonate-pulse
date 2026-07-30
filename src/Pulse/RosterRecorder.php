@@ -43,7 +43,7 @@ class RosterRecorder
      */
     public function record(IsolatedBeat $event): void
     {
-        $interval = (int) config('resonate-pulse.interval', 15);
+        $interval = config()->integer('resonate-pulse.interval', 15);
 
         if ($interval <= 0 || $event->time->second % $interval !== 0) {
             return;

@@ -18,8 +18,10 @@
         "webpatser/resonate-roster": "^0.2"
     },
     "require-dev": {
+        "laravel/pint": "^1.30",
         "orchestra/testbench": "^10.0|^11.0",
         "pestphp/pest": "^4.0",
+        "phpstan/phpstan": "^2.2",
         "webpatser/resonate-token-auth": "^0.2",
         "webpatser/resonate-user-cap": "^0.2",
         "webpatser/resonate-webhooks": "^0.2"
@@ -42,7 +44,9 @@
         }
     },
     "scripts": {
-        "test": "pest"
+        "test": "pest",
+        "lint": "pint --test",
+        "analyse": "phpstan analyse"
     },
     "config": {
         "sort-packages": true,

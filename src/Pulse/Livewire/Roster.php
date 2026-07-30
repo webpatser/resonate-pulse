@@ -2,6 +2,8 @@
 
 namespace Webpatser\ResonatePulse\Pulse\Livewire;
 
+use Illuminate\Contracts\View\Factory as ViewFactory;
+use Illuminate\Contracts\View\View;
 use Laravel\Pulse\Livewire\Card;
 use Laravel\Pulse\Livewire\Concerns\HasPeriod;
 use Laravel\Pulse\Livewire\Concerns\RemembersQueries;
@@ -24,7 +26,7 @@ class Roster extends Card
     /**
      * Render the component.
      */
-    public function render(RosterMetrics $metrics)
+    public function render(RosterMetrics $metrics): ViewFactory|View
     {
         [$snapshot, $time, $runAt] = $this->remember(fn () => $metrics->gather());
 
