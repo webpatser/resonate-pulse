@@ -15,6 +15,7 @@
         "illuminate/contracts": "^13.0",
         "illuminate/support": "^13.0",
         "laravel/pulse": "^1.7",
+        "predis/predis": "^2.2",
         "webpatser/resonate-roster": "^0.2"
     },
     "require-dev": {

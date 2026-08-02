@@ -73,12 +73,20 @@ Drop the cards you want into `resources/views/vendor/pulse/dashboard.blade.php`:
 
 | Key | Default | Purpose |
 |-----|---------|---------|
-| `interval` | `15` | Roster sampling interval in seconds. The other recorders are event-driven and ignore this. |
+| `interval` | `15` | Roster sampling interval in seconds: the recorder samples once this many seconds have elapsed since its last sample. Any value works, including ones that do not divide 60. `0` or less turns the roster recorder off. The other recorders are event-driven and ignore this. |
 
 ## How the recorders write
 
-- **Roster** is a *beat* recorder: each `IsolatedBeat` (one per second) is gated by the interval, and on each tick it snapshots `RoomRoster::occupiedChannels()` and writes three series with avg + max aggregates.
+- **Roster** is a *beat* recorder: each `IsolatedBeat` (one per second) is gated on elapsed time, and on each sample it takes one bulk snapshot of the roster and writes three series with avg + max aggregates.
 - **Webhooks / UserCap / TokenAuth** are *event* recorders: each Laravel event becomes one Pulse record with `count` as the aggregate. Buckets are by application id (Webhooks, UserCap) or rejection reason (TokenAuth), so the cards can break the total down.
+
+## How the roster snapshot reads Redis
+
+`RosterMetrics` needs three things per beat and per dashboard poll: which channels are occupied, who is in them, and how many connections they hold. Asking the roster's per-channel read API costs a full keyspace `SCAN` per question, so gathering C channels cost `1 + 2C` scans. At 500 channels that is roughly 1000 full scans every 15 seconds, on the same Redis that carries the socket server's own traffic.
+
+`RosterSnapshot` replaces that with one sweep: a single `SCAN` over the roster key pattern, then one pipelined round trip of `HGETALL`s. Everything the snapshot needs is already in those hashes (the values are the presence user ids, the field count is the connection count), so the cost no longer scales with the number of channels.
+
+It reads the roster's keyspace directly, using `webpatser/resonate-roster`'s own `RosterKeys` for the layout and the published `resonate-roster` config for the connection, so it never hardcodes a key format. The better long-term home for this is a bulk method on the roster itself; if `RoomRoster` grows one, this class becomes a thin adapter over it.
 
 ## License
 

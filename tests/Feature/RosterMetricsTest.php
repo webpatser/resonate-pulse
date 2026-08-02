@@ -2,7 +2,7 @@
 
 use Predis\Client;
 use Webpatser\ResonatePulse\RosterMetrics;
-use Webpatser\ResonateRoster\RoomRoster;
+use Webpatser\ResonatePulse\RosterSnapshot;
 
 beforeEach(function () {
     if (! redisReachable()) {
@@ -26,7 +26,7 @@ afterEach(function () {
 
 function makeMetrics(): RosterMetrics
 {
-    return new RosterMetrics(new RoomRoster(config('resonate-roster')));
+    return new RosterMetrics(new RosterSnapshot(config('resonate-roster')));
 }
 
 it('returns zeros when the roster is empty', function () {

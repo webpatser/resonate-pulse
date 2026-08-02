@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `RosterSnapshot`: a bulk read of the whole roster keyspace in one `SCAN`
+  sweep plus a single pipelined batch of `HGETALL`s. It is registered as a
+  singleton by `ResonatePulseServiceProvider`, built from the published
+  `resonate-roster` config, and it uses the roster's own `RosterKeys` for the
+  key layout rather than hardcoding one.
+
+### Changed
+
+- **API.** `RosterMetrics::__construct()` now takes a `RosterSnapshot` instead
+  of a `RoomRoster`. Code that resolves `RosterMetrics` from the container (the
+  card and the recorder both do) is unaffected; code that constructed it by
+  hand needs the new argument.
+- **Behaviour.** `RosterMetrics::gather()` no longer costs `1 + 2C` full
+  keyspace scans for `C` occupied channels. It called `users()` and
+  `connectionCount()` per channel and each of those was its own full `SCAN`, so
+  at 500 channels a snapshot meant roughly 1000 scans, on every beat and every
+  dashboard poll. A snapshot is now a single sweep whose cost does not scale
+  with the channel count. The returned data is unchanged.
+- **Behaviour.** `RosterRecorder` gates sampling on elapsed time instead of
+  `second % interval`. Second-of-minute modulo only lined up when the interval
+  divided 60: an interval of 45 fired at `:00` and `:45` (alternating 45 and 15
+  second gaps), and any interval of 60 or more could only match at `:00`, so it
+  silently collapsed to one sample a minute. Intervals now mean what they say,
+  and the first beat after start always samples rather than waiting for the
+  minute's grid. An interval of `0` or less still disables the recorder.
+- `predis/predis` is now a direct dependency: it was already installed through
+  `webpatser/resonate-roster`, and the snapshot reader uses it directly.
+
 ## [0.2.0] - 2026-05-25
 
 ### Added

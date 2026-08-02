@@ -2,6 +2,8 @@
 
 namespace Webpatser\ResonatePulse;
 
+use Illuminate\Contracts\Config\Repository;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
 use Webpatser\ResonatePulse\Pulse\Livewire\Roster;
@@ -27,6 +29,14 @@ class ResonatePulseServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/resonate-pulse.php', 'resonate-pulse');
+
+        // The bulk reader is built from the roster's own connection config, so
+        // the card and the recorder read the same Redis the roster writes to.
+        $this->app->singleton(RosterSnapshot::class, function (Application $app): RosterSnapshot {
+            $config = $app->make(Repository::class)->get('resonate-roster', []);
+
+            return new RosterSnapshot(is_array($config) ? $config : []);
+        });
     }
 
     /**
