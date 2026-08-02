@@ -5,62 +5,46 @@ All notable changes to `webpatser/resonate-pulse` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.0] - 2026-08-02
 
 ### Added
 
-- `RosterSnapshot`: the roster-facing side of the metrics gathering. It is
-  registered as a singleton by `ResonatePulseServiceProvider` and is a thin
-  adapter over `RoomRoster::snapshot()`, which returns every occupied channel of
-  one application in a single `SCAN` sweep plus one pipelined batch of
-  `HGETALL`s. Pulse holds no Redis connection and no key format of its own, so a
-  roster schema change travels across on a composer update.
+- `RosterSnapshot`: a thin adapter over `RoomRoster::snapshot()`, registered as a singleton by `ResonatePulseServiceProvider`. Pulse holds no Redis connection and no key format of its own, so a roster schema change now travels across on a composer update.
+- `applications` key on `RosterMetrics::gather()`: `appId => ['rooms' => n, 'users' => n, 'connections' => n]`.
 
 ### Changed
 
-- **Requires `webpatser/resonate-roster` 0.3+.** The roster key schema gained an
-  application segment (`{prefix}:{appId}:{channel}:{node}`) and `RosterKeys`
-  changed with it, so this release does not work against roster 0.2. The old
-  `^0.2` constraint also excluded 0.3 outright under Composer's 0.x caret rules,
-  which made the two uninstallable together. `webpatser/resonate` is now a direct
-  dependency too: the cards resolve the configured applications through its
-  `ApplicationProvider`.
-- **API.** `RosterMetrics::__construct()` now takes a `RosterSnapshot` instead
-  of a `RoomRoster`. Code that resolves `RosterMetrics` from the container (the
-  card and the recorder both do) is unaffected; code that constructed it by
-  hand needs the new argument.
-- **Behaviour.** `RosterMetrics::gather()` reports per application and totals
-  the result, instead of merging every application into one set of figures. Two
-  applications that both serve a `presence-lobby` are two rooms with two
-  memberships, and the same user id in each is two people; the old keyspace had
-  no application dimension, so they were silently merged. `gather()` gains an
-  `applications` key (`appId => ['rooms' => n, 'users' => n, 'connections' => n]`),
-  and `top` is now a list of `['application' => ..., 'channel' => ..., 'users' => n]`
-  rather than a channel-keyed map, since a channel name alone no longer
-  identifies a room. The Roster card shows the per-application breakdown and an
-  application column only when the server has more than one application, so a
-  single-app dashboard looks unchanged.
-- **Behaviour.** `RosterMetrics::gather()` no longer costs `1 + 2C` full
-  keyspace scans for `C` occupied channels. It called `users()` and
-  `connectionCount()` per channel and each of those was its own full `SCAN`, so
-  at 500 channels a snapshot meant roughly 1000 scans, on every beat and every
-  dashboard poll. A gather is now one sweep per application (two while the
-  roster's `legacy_fallback` window is open) whose cost does not scale with the
-  channel count.
-- **Behaviour.** `RosterRecorder` gates sampling on elapsed time instead of
-  `second % interval`. Second-of-minute modulo only lined up when the interval
-  divided 60: an interval of 45 fired at `:00` and `:45` (alternating 45 and 15
-  second gaps), and any interval of 60 or more could only match at `:00`, so it
-  silently collapsed to one sample a minute. Intervals now mean what they say,
-  and the first beat after start always samples rather than waiting for the
-  minute's grid. An interval of `0` or less still disables the recorder.
+- Allow `webpatser/resonate` v0.6, and require the 0.3.1 releases of `resonate-roster`, `resonate-webhooks`, `resonate-user-cap` and `resonate-token-auth`, which carry the same widening. The previous constraints could not resolve against the current server release.
+
+- Require `webpatser/resonate-roster` `^0.3` (was `^0.2`), and add `webpatser/resonate` as a direct dependency for the `ApplicationProvider` the cards resolve applications through.
+- Read roster metrics through `RosterSnapshot`: `RosterMetrics::__construct()` takes one instead of a `RoomRoster`. Container resolution is unaffected; hand-built instances need the new argument.
+- Report `gather()` figures per application and total them, instead of merging every application into one set. Two applications serving a `presence-lobby` are two rooms with two memberships.
+- Return `gather()['top']` as a list of `['application' => ..., 'channel' => ..., 'users' => n]` rather than a channel-keyed map, since a channel name alone no longer identifies a room.
+- Show the per-application breakdown and an application column on the Roster card only when the server has more than one application, so a single-app dashboard is unchanged.
+- Cut a gather from `1 + 2C` full keyspace scans for `C` occupied channels to one sweep per application (two while the roster's `legacy_fallback` window is open), so its cost no longer scales with the channel count.
+
 ### Removed
 
-- The direct `predis/predis` dependency, along with the connection-parameter
-  building and the keyspace scanning that came with it. All of that lives in
-  `webpatser/resonate-roster`, which owns the schema; pulse asks it for a
-  snapshot and does no Redis work of its own. Predis stays a dev dependency,
-  because the test suite seeds Redis directly.
+- The runtime `predis/predis` dependency, with the connection-parameter building and keyspace scanning that came with it. It stays a dev dependency, because the test suite seeds Redis directly.
+
+### Fixed
+
+- Gate `RosterRecorder` sampling on elapsed time instead of `second % interval`. Modulo only lined up when the interval divided 60: 45 alternated 45 and 15 second gaps, and anything from 60 up collapsed to one sample a minute. The first beat after start now always samples, and `0` or less still disables the recorder.
+
+### Upgrading
+
+Requires `webpatser/resonate-roster` 0.3+. The constraint moved from `^0.2` to `^0.3`, so Composer will not install this release alongside an older roster. Upgrade the wave together and follow the roster's upgrade procedure.
+
+- Roster metrics read through `RoomRoster::snapshot()`. Pulse opens no Redis connection of its own, so the roster's `connection` config is the only one that applies.
+- `predis/predis` moved from a runtime dependency to dev-only. A host that relied on pulse pulling it in must require it directly.
+- Figures are per application and then totalled, where they were previously merged across applications. A single-app server sees no change. A multi-app server sees rooms and distinct users rise, because two applications serving a `presence-lobby` are two rooms with two memberships instead of one merged hash; total connections are unchanged.
+- `gather()['top']` is a list, not a channel-keyed map. Code reading it by channel name needs updating.
+
+## [0.2.1] - 2026-07-30
+
+### Changed
+
+- Run the suite against a real Redis service in CI, and add Pint and PHPStan as gates.
 
 ## [0.2.0] - 2026-05-25
 
@@ -100,6 +84,7 @@ Initial release.
 - Configurable sampling interval (`RESONATE_PULSE_INTERVAL`, default 15s).
 - Publishable config and views via `vendor:publish --tag=resonate-pulse-*`.
 
-[Unreleased]: https://github.com/webpatser/resonate-pulse/compare/v0.2.0...HEAD
+[0.3.0]: https://github.com/webpatser/resonate-pulse/compare/v0.2.1...v0.3.0
+[0.2.1]: https://github.com/webpatser/resonate-pulse/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/webpatser/resonate-pulse/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/webpatser/resonate-pulse/releases/tag/v0.1.0
