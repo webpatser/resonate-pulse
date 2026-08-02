@@ -9,24 +9,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `RosterSnapshot`: a bulk read of the whole roster keyspace in one `SCAN`
-  sweep plus a single pipelined batch of `HGETALL`s. It is registered as a
-  singleton by `ResonatePulseServiceProvider`, built from the published
-  `resonate-roster` config, and it uses the roster's own `RosterKeys` for the
-  key layout rather than hardcoding one.
+- `RosterSnapshot`: the roster-facing side of the metrics gathering. It is
+  registered as a singleton by `ResonatePulseServiceProvider` and is a thin
+  adapter over `RoomRoster::snapshot()`, which returns every occupied channel of
+  one application in a single `SCAN` sweep plus one pipelined batch of
+  `HGETALL`s. Pulse holds no Redis connection and no key format of its own, so a
+  roster schema change travels across on a composer update.
 
 ### Changed
 
+- **Requires `webpatser/resonate-roster` 0.3+.** The roster key schema gained an
+  application segment (`{prefix}:{appId}:{channel}:{node}`) and `RosterKeys`
+  changed with it, so this release does not work against roster 0.2. The old
+  `^0.2` constraint also excluded 0.3 outright under Composer's 0.x caret rules,
+  which made the two uninstallable together. `webpatser/resonate` is now a direct
+  dependency too: the cards resolve the configured applications through its
+  `ApplicationProvider`.
 - **API.** `RosterMetrics::__construct()` now takes a `RosterSnapshot` instead
   of a `RoomRoster`. Code that resolves `RosterMetrics` from the container (the
   card and the recorder both do) is unaffected; code that constructed it by
   hand needs the new argument.
+- **Behaviour.** `RosterMetrics::gather()` reports per application and totals
+  the result, instead of merging every application into one set of figures. Two
+  applications that both serve a `presence-lobby` are two rooms with two
+  memberships, and the same user id in each is two people; the old keyspace had
+  no application dimension, so they were silently merged. `gather()` gains an
+  `applications` key (`appId => ['rooms' => n, 'users' => n, 'connections' => n]`),
+  and `top` is now a list of `['application' => ..., 'channel' => ..., 'users' => n]`
+  rather than a channel-keyed map, since a channel name alone no longer
+  identifies a room. The Roster card shows the per-application breakdown and an
+  application column only when the server has more than one application, so a
+  single-app dashboard looks unchanged.
 - **Behaviour.** `RosterMetrics::gather()` no longer costs `1 + 2C` full
   keyspace scans for `C` occupied channels. It called `users()` and
   `connectionCount()` per channel and each of those was its own full `SCAN`, so
   at 500 channels a snapshot meant roughly 1000 scans, on every beat and every
-  dashboard poll. A snapshot is now a single sweep whose cost does not scale
-  with the channel count. The returned data is unchanged.
+  dashboard poll. A gather is now one sweep per application (two while the
+  roster's `legacy_fallback` window is open) whose cost does not scale with the
+  channel count.
 - **Behaviour.** `RosterRecorder` gates sampling on elapsed time instead of
   `second % interval`. Second-of-minute modulo only lined up when the interval
   divided 60: an interval of 45 fired at `:00` and `:45` (alternating 45 and 15
@@ -34,8 +54,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   silently collapsed to one sample a minute. Intervals now mean what they say,
   and the first beat after start always samples rather than waiting for the
   minute's grid. An interval of `0` or less still disables the recorder.
-- `predis/predis` is now a direct dependency: it was already installed through
-  `webpatser/resonate-roster`, and the snapshot reader uses it directly.
+### Removed
+
+- The direct `predis/predis` dependency, along with the connection-parameter
+  building and the keyspace scanning that came with it. All of that lives in
+  `webpatser/resonate-roster`, which owns the schema; pulse asks it for a
+  snapshot and does no Redis work of its own. Predis stays a dev dependency,
+  because the test suite seeds Redis directly.
 
 ## [0.2.0] - 2026-05-25
 

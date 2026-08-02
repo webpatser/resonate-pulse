@@ -30,21 +30,62 @@
                 </div>
             </div>
 
+            @php($perApplication = count($snapshot['applications']) > 1)
+
+            @if ($perApplication)
+                <table class="min-w-full text-sm mb-6">
+                    <thead>
+                        <tr class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 text-left">
+                            <th class="py-2 px-2 font-medium">Application</th>
+                            <th class="py-2 px-2 font-medium text-right">Rooms</th>
+                            <th class="py-2 px-2 font-medium text-right">Users</th>
+                            <th class="py-2 px-2 font-medium text-right">Connections</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($snapshot['applications'] as $application => $totals)
+                            <tr wire:key="resonate-roster-app:{{ $application }}" class="border-t border-gray-100 dark:border-gray-800">
+                                <td class="py-2 px-2 font-mono text-gray-900 dark:text-gray-100 truncate">
+                                    {{ $application }}
+                                </td>
+                                <td class="py-2 px-2 text-right tabular-nums text-gray-700 dark:text-gray-300">
+                                    {{ number_format($totals['rooms']) }}
+                                </td>
+                                <td class="py-2 px-2 text-right tabular-nums text-gray-700 dark:text-gray-300">
+                                    {{ number_format($totals['users']) }}
+                                </td>
+                                <td class="py-2 px-2 text-right tabular-nums text-gray-700 dark:text-gray-300">
+                                    {{ number_format($totals['connections']) }}
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
+
             <table class="min-w-full text-sm">
                 <thead>
                     <tr class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 text-left">
+                        @if ($perApplication)
+                            <th class="py-2 px-2 font-medium">Application</th>
+                        @endif
                         <th class="py-2 px-2 font-medium">Channel</th>
                         <th class="py-2 px-2 font-medium text-right">Users</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($snapshot['top'] as $channel => $count)
-                        <tr wire:key="resonate-roster:{{ $channel }}" class="border-t border-gray-100 dark:border-gray-800">
+                    @foreach ($snapshot['top'] as $room)
+                        <tr wire:key="resonate-roster:{{ $room['application'] }}:{{ $room['channel'] }}" class="border-t border-gray-100 dark:border-gray-800">
+                            @if ($perApplication)
+                                <td class="py-2 px-2 font-mono text-gray-500 dark:text-gray-400 truncate">
+                                    {{ $room['application'] }}
+                                </td>
+                            @endif
                             <td class="py-2 px-2 font-mono text-gray-900 dark:text-gray-100 truncate">
-                                {{ $channel }}
+                                {{ $room['channel'] }}
                             </td>
                             <td class="py-2 px-2 text-right tabular-nums text-gray-700 dark:text-gray-300">
-                                {{ number_format($count) }}
+                                {{ number_format($room['users']) }}
                             </td>
                         </tr>
                     @endforeach

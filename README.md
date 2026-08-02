@@ -6,7 +6,7 @@ Laravel Pulse cards for the [Resonate](https://github.com/webpatser/resonate) pl
 
 | Card | Source plugin (required to enable) | Recorder | Pulse series |
 |------|------------------------------------|----------|--------------|
-| **Roster** | `webpatser/resonate-roster` 0.2+ | `Pulse\RosterRecorder` (beat) | `resonate_roster_rooms`, `resonate_roster_users`, `resonate_roster_connections` |
+| **Roster** | `webpatser/resonate-roster` 0.3+ | `Pulse\RosterRecorder` (beat) | `resonate_roster_rooms`, `resonate_roster_users`, `resonate_roster_connections` |
 | **Webhooks** | `webpatser/resonate-webhooks` 0.2+ | `Pulse\WebhooksRecorder` (events) | `resonate_webhook_delivered`, `resonate_webhook_failed` |
 | **UserCap** | `webpatser/resonate-user-cap` 0.2+ | `Pulse\UserCapRecorder` (event) | `resonate_user_cap_exceeded` |
 | **TokenAuth** | `webpatser/resonate-token-auth` 0.2+ | `Pulse\TokenAuthRecorder` (event) | `resonate_token_rejected` |
@@ -18,7 +18,7 @@ A recorder is only useful when its source plugin is installed. The pulse package
 - PHP 8.5+
 - Laravel 13
 - `laravel/pulse` 1.7+
-- `webpatser/resonate-roster` 0.2+ (the Roster card and recorder always require this)
+- `webpatser/resonate-roster` 0.3+ (the Roster card and recorder always require this)
 
 ## Installation
 
@@ -84,9 +84,15 @@ Drop the cards you want into `resources/views/vendor/pulse/dashboard.blade.php`:
 
 `RosterMetrics` needs three things per beat and per dashboard poll: which channels are occupied, who is in them, and how many connections they hold. Asking the roster's per-channel read API costs a full keyspace `SCAN` per question, so gathering C channels cost `1 + 2C` scans. At 500 channels that is roughly 1000 full scans every 15 seconds, on the same Redis that carries the socket server's own traffic.
 
-`RosterSnapshot` replaces that with one sweep: a single `SCAN` over the roster key pattern, then one pipelined round trip of `HGETALL`s. Everything the snapshot needs is already in those hashes (the values are the presence user ids, the field count is the connection count), so the cost no longer scales with the number of channels.
+Roster 0.3 answers all of it in one call: `RoomRoster::snapshot()` does a single `SCAN` sweep plus one pipelined round trip of `HGETALL`s, because everything needed is already in those hashes (the values are the presence user ids, the field count is the connection count). The cost no longer scales with the number of channels.
 
-It reads the roster's keyspace directly, using `webpatser/resonate-roster`'s own `RosterKeys` for the layout and the published `resonate-roster` config for the connection, so it never hardcodes a key format. The better long-term home for this is a bulk method on the roster itself; if `RoomRoster` grows one, this class becomes a thin adapter over it.
+`RosterSnapshot` is the thin adapter over that call: it asks the roster once per configured application and hands the result to `RosterMetrics`. Pulse holds no Redis connection and no key format of its own, so a roster schema change travels across on a composer update rather than breaking a card.
+
+## Per-application figures
+
+A roster belongs to one application. Before roster 0.3 the keyspace had no application dimension, so two applications that both served a `presence-lobby` were reported as one merged room, with one merged membership.
+
+The Roster card now gathers per application and totals the result, so those are two rooms with two memberships, and the same user id in two applications counts as two people. When the server has more than one application configured, the card breaks the totals down per application and names the application beside each top room; a single-app server sees exactly what it saw before.
 
 ## License
 

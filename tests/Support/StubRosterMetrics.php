@@ -4,6 +4,7 @@ namespace Webpatser\ResonatePulse\Tests\Support;
 
 use Webpatser\ResonatePulse\RosterMetrics;
 use Webpatser\ResonatePulse\RosterSnapshot;
+use Webpatser\ResonateRoster\RoomRoster;
 
 /**
  * A gatherer that answers from memory, so the sampling-gate tests exercise the
@@ -21,13 +22,19 @@ class StubRosterMetrics extends RosterMetrics
      */
     public function __construct()
     {
-        parent::__construct(new RosterSnapshot([]));
+        parent::__construct(new RosterSnapshot(new RoomRoster([])));
     }
 
     /**
      * Return a fixed snapshot.
      *
-     * @return array{rooms: int, users: int, connections: int, top: array<string, int>}
+     * @return array{
+     *     rooms: int,
+     *     users: int,
+     *     connections: int,
+     *     top: list<array{application: string, channel: string, users: int}>,
+     *     applications: array<string, array{rooms: int, users: int, connections: int}>,
+     * }
      */
     public function gather(int $topLimit = 10): array
     {
@@ -37,7 +44,12 @@ class StubRosterMetrics extends RosterMetrics
             'rooms' => 2,
             'users' => 3,
             'connections' => 4,
-            'top' => ['presence-chat.1' => 2],
+            'top' => [
+                ['application' => 'app-id', 'channel' => 'presence-chat.1', 'users' => 2],
+            ],
+            'applications' => [
+                'app-id' => ['rooms' => 2, 'users' => 3, 'connections' => 4],
+            ],
         ];
     }
 }
