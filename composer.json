@@ -16,7 +16,7 @@
         "illuminate/support": "^13.0",
         "laravel/pulse": "^1.7",
         "webpatser/resonate": "^0.4|^0.5|^0.6",
-        "webpatser/resonate-roster": "^0.3.1"
+        "webpatser/resonate-roster": "^0.3.1|^0.4"
     },
     "require-dev": {
         "laravel/pint": "^1.30",
@@ -24,9 +24,9 @@
         "pestphp/pest": "^4.0",
         "phpstan/phpstan": "^2.2",
         "predis/predis": "^2.2",
-        "webpatser/resonate-token-auth": "^0.3.1",
-        "webpatser/resonate-user-cap": "^0.3.1",
-        "webpatser/resonate-webhooks": "^0.3.1"
+        "webpatser/resonate-token-auth": "^0.3.1|^0.4",
+        "webpatser/resonate-user-cap": "^0.3.1|^0.4",
+        "webpatser/resonate-webhooks": "^0.3.1|^0.4"
     },
     "autoload": {
         "psr-4": {

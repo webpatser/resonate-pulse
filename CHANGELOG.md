@@ -5,11 +5,12 @@ All notable changes to `webpatser/resonate-pulse` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.1] - 2026-09-02
 
 ### Changed
 
-- Verified against `webpatser/resonate` v0.6.1 and `webpatser/resonate-roster` 0.3.2. No code change: the cards read through `RosterSnapshot`, and the roster's read-side pipelining is transparent to them.
+- Allow `webpatser/resonate-roster` 0.4, and the 0.4 releases of `resonate-webhooks`, `resonate-user-cap` and `resonate-token-auth` in the test matrix. The constraints stay open to 0.3.1, so an existing install is not forced to move the whole family at once.
+- Verified against `webpatser/resonate` v0.6.1 and `webpatser/resonate-roster` 0.4.0. No behaviour change: the cards read through `RosterSnapshot`, and the roster's read-side pipelining is transparent to them.
 
 ## [0.3.0] - 2026-08-02
 
