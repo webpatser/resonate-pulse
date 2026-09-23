@@ -6,10 +6,10 @@ Laravel Pulse cards for the [Resonate](https://github.com/webpatser/resonate) pl
 
 | Card | Source plugin (required to enable) | Recorder | Pulse series |
 |------|------------------------------------|----------|--------------|
-| **Roster** | `webpatser/resonate-roster` 0.3+ | `Pulse\RosterRecorder` (beat) | `resonate_roster_rooms`, `resonate_roster_users`, `resonate_roster_connections` |
-| **Webhooks** | `webpatser/resonate-webhooks` 0.2+ | `Pulse\WebhooksRecorder` (events) | `resonate_webhook_delivered`, `resonate_webhook_failed` |
-| **UserCap** | `webpatser/resonate-user-cap` 0.2+ | `Pulse\UserCapRecorder` (event) | `resonate_user_cap_exceeded` |
-| **TokenAuth** | `webpatser/resonate-token-auth` 0.2+ | `Pulse\TokenAuthRecorder` (event) | `resonate_token_rejected` |
+| **Roster** | `webpatser/resonate-roster` 0.7+ | `Pulse\RosterRecorder` (beat) | `resonate_roster_rooms`, `resonate_roster_users`, `resonate_roster_connections` |
+| **Webhooks** | `webpatser/resonate-webhooks` 0.7+ | `Pulse\WebhooksRecorder` (events) | `resonate_webhook_delivered`, `resonate_webhook_failed` |
+| **UserCap** | `webpatser/resonate-user-cap` 0.7+ | `Pulse\UserCapRecorder` (event) | `resonate_user_cap_exceeded` |
+| **TokenAuth** | `webpatser/resonate-token-auth` 0.7+ | `Pulse\TokenAuthRecorder` (event) | `resonate_token_rejected` |
 
 A recorder is only useful when its source plugin is installed. The pulse package does not hard-require the three event-driven plugins; the host opts in to each recorder via `config/pulse.php`, and you only register the cards you have data for.
 
@@ -18,7 +18,7 @@ A recorder is only useful when its source plugin is installed. The pulse package
 - PHP 8.5+
 - Laravel 13
 - `laravel/pulse` 1.7+
-- `webpatser/resonate-roster` 0.3+ (the Roster card and recorder always require this)
+- `webpatser/resonate-roster` 0.7+ (the Roster card and recorder always require this)
 
 ## Installation
 
