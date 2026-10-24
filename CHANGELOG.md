@@ -5,6 +5,12 @@ All notable changes to `webpatser/resonate-pulse` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Security
+
+- Add a `conflict` rule on `livewire/livewire` `>=4.3.0 <4.4.8` (GHSA-mhf7-xp6r-6qrc) so the vulnerable Livewire versions pulled in through `laravel/pulse` are no longer installable. Livewire 3 and 4.0 to 4.2, which the advisory does not affect, stay installable.
+
 ## [0.7.0] - 2026-09-23
 
 ### Changed

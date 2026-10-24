@@ -28,6 +28,9 @@
         "webpatser/resonate-user-cap": "^0.7",
         "webpatser/resonate-webhooks": "^0.7"
     },
+    "conflict": {
+        "livewire/livewire": ">=4.3.0 <4.4.8"
+    },
     "autoload": {
         "psr-4": {
             "Webpatser\\ResonatePulse\\": "src/"
