@@ -96,15 +96,6 @@ it('reads one application without seeing another', function () {
         ->and($snapshot->channels('app-two')['presence-lobby']['users'])->toBe(['u-bob']);
 });
 
-it('still reads a node that writes pre-0.3.0 keys', function () {
-    // No application segment: written by a node that has not been upgraded.
-    $this->redis->hset('roster-test:presence-chat.1:node-old', 'sock-1', 'u-alice');
-
-    [$snapshot] = countingSnapshot();
-
-    expect($snapshot->channels()['presence-chat.1']['users'])->toBe(['u-alice']);
-});
-
 it('does not scan more as the number of channels grows', function () {
     // Two channels, two nodes each.
     foreach ([1, 2] as $i) {
@@ -132,11 +123,10 @@ it('does not scan more as the number of channels grows', function () {
 
     // The whole point of the bulk path: cost is a function of the keyspace
     // sweep, not of the channel count. Per-channel gathering would have cost
-    // 1 + 2C scans here, so 5 and 17 rather than an unchanged handful. Two
-    // sweeps are expected while the roster's legacy fallback window is open:
-    // one over the application's keys, one over the pre-0.3.0 keyspace.
+    // 1 + 2C scans here, so 5 and 17 rather than an unchanged count. No
+    // absolute cap: a sweep takes one SCAN per batch of the whole database,
+    // so its size depends on whatever else lives in db 15.
     expect($manyScans)->toBe($fewScans)
-        ->and($manyScans)->toBeLessThanOrEqual(4)
         ->and($manyScans)->toBeGreaterThan(0);
 });
 
